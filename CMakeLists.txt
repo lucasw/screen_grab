@@ -112,6 +112,7 @@ add_executable(screengrab_ros_node src/screengrab_ros_node.cpp)
 ## Specify libraries to link a library or executable target against
 target_link_libraries(screengrab_ros_node
    ${catkin_LIBRARIES}
+   X11
 )
 
 #############
