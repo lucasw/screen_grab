@@ -71,7 +71,7 @@ void XImage2RosImage(XImage& ximage, Display& _xDisplay, Screen& _xScreen,
        const int frame_size = wd * ht * 4;
        im->width = wd;
        im->height = ht;
-       im->step = im->width * 3;
+       im->step = im->width * 4;
        im->encoding = sensor_msgs::image_encodings::BGRA8;
        im->data.resize(frame_size);
        memcpy(&im->data[0], ximage.data, frame_size); 
