@@ -1,25 +1,25 @@
 <?xml version="1.0"?>
 <package>
   <name>screengrab_ros</name>
-  <version>0.0.0</version>
+  <version>0.0.1</version>
   <description>The screengrab_ros package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <!-- Example:  -->
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
-  <maintainer email="lucasw@todo.todo">lucasw</maintainer>
+  <maintainer email="lucasw@todo.todo">Lucas Walter</maintainer>
 
 
   <!-- One license tag required, multiple allowed, one license per tag -->
   <!-- Commonly used license strings: -->
   <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
-  <license>TODO</license>
+  <license>BSD</license>
 
 
   <!-- Url tags are optional, but mutiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://ros.org/wiki/screengrab_ros</url> -->
+  <url type="website">https://github.com/lucasw/screengrab_ros</url> 
 
 
   <!-- Author tags are optional, mutiple are allowed, one per tag -->
