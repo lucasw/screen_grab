@@ -1,3 +1,5 @@
+// copyright Lucas Walter November 2013
+
 #include "ros/ros.h"
 #include "sensor_msgs/Image.h"
 #include "sensor_msgs/image_encodings.h"
@@ -90,19 +92,24 @@ int main(int argc, char **argv)
   screen_h = xwAttr.height;
   }
 
-
+  int startX = 0;
+  int startY = 0;
+  int widthX = 640;
+  int heightY = 480;
+  
   while (ros::ok()) 
   {
     sensor_msgs::ImagePtr im(new sensor_msgs::Image);
     
     // grab the image
     {
-      int startX = 0;
-      int startY = 0;
-      int widthX = 640;
-      int heightY = 480;
+      ros::param::param<int>("start_x", startX, 0);
+      ros::param::param<int>("start_y", startY, 0);
+      ros::param::param<int>("width_x", widthX, 640);
+      ros::param::param<int>("height_y", heightY, 480);
 
       // Need to check against resolution
+      bool changed = false;
       if ((startX + widthX) > screen_w) {
         // TBD need to more intelligently cap these
         if (screen_w > widthX) {
@@ -110,7 +117,10 @@ int main(int argc, char **argv)
         } else {
           startX = 0;
           widthX = screen_w;
+          ros::param::set("width_x", widthX);
         }
+        ros::param::set("start_x", startY);
+        changed = true;
       }
 
       if ((startY + heightY) > screen_h) {
@@ -120,7 +130,15 @@ int main(int argc, char **argv)
         } else {
           startY = 0;
           heightY = screen_h;
+          ros::param::set("height_y", heightY);
         }
+        ros::param::set("start_y", startY);
+        changed = true;
+      }
+      
+      if (changed) {
+        ROS_WARN_STREAM("parameters had to change " << startX << " " 
+            << startY << " " << widthX << " " << heightY);
       }
 
       xImageSample = XGetImage(display, DefaultRootWindow(display),
