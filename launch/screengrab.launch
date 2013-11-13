@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <launch>
 
-  <node name="screengrab1" pkg="screengrab_ros" type="screengrab_ros_node" />
-  <node name="image_view_grab" pkg="image_view" type="image_view" args="image:=/screengrab" />
-  <!-- later add save file that will automatically display screengrab topic -->
-  <!--node name="rviz1" pkg="rviz" type="rviz" /-->
+  <group ns="screengrab_ns">
+    <param name="start_x" value="50" />
+    <param name="start_y" value="50" />
+    <param name="width_x" value="500" />
+    <param name="height_y" value="500" />
+    <node name="screengrab1" pkg="screengrab_ros" type="screengrab_ros_node" />
+    <node name="image_view_grab" pkg="image_view" type="image_view" args="image:=screengrab" />
+    <!-- later add save file that will automatically display screengrab topic -->
+    <!--node name="rviz1" pkg="rviz" type="rviz" /-->
+  </group>
 </launch>
