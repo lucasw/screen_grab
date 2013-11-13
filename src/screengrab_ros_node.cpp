@@ -52,8 +52,9 @@ int main(int argc, char **argv)
 
   ros::Publisher screen_pub = nh.advertise<sensor_msgs::Image>(
       "screengrab", 5);
-  // TBD make teh rate a ros param
-  ros::Rate loop_rate(10);
+  int update_rate;
+  ros::param::param<int>("update_rate", update_rate, 15);
+  ros::Rate loop_rate(update_rate);
 
   // X resources
   Display* display;
@@ -101,6 +102,12 @@ int main(int argc, char **argv)
   {
     sensor_msgs::ImagePtr im(new sensor_msgs::Image);
     
+    int new_update_rate;
+    ros::param::param<int>("update_rate", new_update_rate, 15);
+    if (new_update_rate != update_rate) {
+      loop_rate = ros::Rate(new_update_rate);
+      update_rate = new_update_rate;
+    }
     // grab the image
     {
       ros::param::param<int>("start_x", startX, 0);

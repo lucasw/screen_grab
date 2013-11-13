@@ -2,6 +2,7 @@
 <launch>
 
   <group ns="screengrab_ns">
+    <param name="update_rate" value="30" />
     <param name="start_x" value="50" />
     <param name="start_y" value="50" />
     <param name="width_x" value="500" />
