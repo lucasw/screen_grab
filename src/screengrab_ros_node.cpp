@@ -53,9 +53,24 @@ class ScreenGrab
   
   int update_rate_;
 
-  dynamic_reconfigure::Server<screengrab_ros::ScreenGrabConfig> server_;
+  typedef dynamic_reconfigure::Server<screengrab_ros::ScreenGrabConfig> ReconfigureServer;
+  boost::shared_ptr< ReconfigureServer > server_;
   void callback(screengrab_ros::ScreenGrabConfig &config,
       uint32_t level);
+
+  void checkRoi(int& x_offset, int& y_offset, int& width, int& height);
+
+  int x_offset_;
+  int y_offset_;
+  int width_;
+  int height_;
+  
+  int screen_w_;
+  int screen_h_;
+  
+  ros::Rate loop_rate_;
+
+  boost::recursive_mutex dr_mutex_;
 
 public:
 
@@ -63,39 +78,92 @@ public:
   
   bool spin();
 
- 
 };
   
-ScreenGrab::ScreenGrab()
+ScreenGrab::ScreenGrab() :
+    x_offset_(0),
+    y_offset_(0),
+    width_(640),
+    height_(480),
+    loop_rate_(15)
+    //server_(dr_mutex_) // this locks up
 {
-
   screen_pub_ = nh_.advertise<sensor_msgs::Image>(
       "screengrab", 5);
   ros::param::param<int>("update_rate", update_rate_, 15);
 
+  server_.reset(new ReconfigureServer(dr_mutex_)); 
+
   dynamic_reconfigure::Server<screengrab_ros::ScreenGrabConfig>::CallbackType cbt =
       boost::bind(&ScreenGrab::callback, this, _1, _2);
-  server_.setCallback(cbt);
+  server_->setCallback(cbt);
 }
 
-void ScreenGrab::callback(screengrab_ros::ScreenGrabConfig &config,
+void ScreenGrab::checkRoi(int& x_offset, int& y_offset, int& width, int& height)
+{
+  // TODO with cv::Rect this could be one line rect1 & rect2
+  
+  // Need to check against resolution
+  if ((x_offset + width) > screen_w_) 
+  {
+    // TBD need to more intelligently cap these
+    if (screen_w_ > width) 
+    {
+      x_offset = screen_w_ - width;
+    } 
+    else 
+    {
+      x_offset = 0;
+      width = screen_w_;
+    }
+  }
+
+  if ((y_offset + height) > screen_h_) 
+  {
+    // TBD need to more intelligently cap these
+    if (screen_h_ > height) 
+    {
+      y_offset = screen_h_ - height;
+    } 
+    else 
+    {
+      y_offset = 0;
+      height = screen_h_;
+    }
+  }
+
+}
+
+void ScreenGrab::callback(
+    screengrab_ros::ScreenGrabConfig &config,
     uint32_t level)
 {
+  if (level & 1)
+  {
+    checkRoi(config.x_offset, config.y_offset, config.width, config.height);
+    x_offset_ = config.x_offset;
+    y_offset_ = config.y_offset;
+    width_ = config.width;
+    height_ = config.height;
+  }
   
+  if (level & 2)
+  {
+    if (config.update_rate != update_rate_) 
+    {
+      loop_rate_ = ros::Rate(config.update_rate);
+      update_rate_ = config.update_rate;
+    }
+  }
 }
 
 bool ScreenGrab::spin()
 {
-  ros::Rate loop_rate(update_rate_);
-
   // X resources
   Display* display;
   Screen* screen;
   XImage* xImageSample;
   XColor col;
-
-  int screen_w;
-  int screen_h;
 
   // init
   // from vimjay screencap.cpp (https://github.com/lucasw/vimjay)
@@ -121,71 +189,46 @@ bool ScreenGrab::spin()
 
   XWindowAttributes xwAttr;
   Status ret = XGetWindowAttributes( display, wid, &xwAttr );
-  screen_w = xwAttr.width;
-  screen_h = xwAttr.height;
+  screen_w_ = xwAttr.width;
+  screen_h_ = xwAttr.height;
   }
 
-  int startX = 0;
-  int startY = 0;
-  int widthX = 640;
-  int heightY = 480;
-  
+  // get initial values from parameter server, override
+  // dr cfg defaults
+  ros::param::param<int>("update_rate", update_rate_, 15);
+  ros::param::param<int>("x_offset", x_offset_, 0);
+  ros::param::param<int>("y_offset", y_offset_, 0);
+  ros::param::param<int>("width", width_, 640);
+  ros::param::param<int>("height", height_, 480);
+  checkRoi(x_offset_, y_offset_, width_, height_);
+
+  screengrab_ros::ScreenGrabConfig config;
+  config.update_rate = update_rate_;
+  config.x_offset = x_offset_;
+  config.y_offset = y_offset_;
+  config.width = width_;
+  config.height = height_;
+
+  //boost::recursive_mutex::scoped_lock lock(dr_mutex_);
+  server_->updateConfig(config);
+  //lock.unlock();
+
   while (ros::ok()) 
   {
     sensor_msgs::ImagePtr im(new sensor_msgs::Image);
     
-    int new_update_rate;
-    ros::param::param<int>("update_rate", new_update_rate, 15);
-    if (new_update_rate != update_rate_) {
-      loop_rate = ros::Rate(new_update_rate);
-      update_rate_ = new_update_rate;
-    }
     // grab the image
     {
-      ros::param::param<int>("start_x", startX, 0);
-      ros::param::param<int>("start_y", startY, 0);
-      ros::param::param<int>("width_x", widthX, 640);
-      ros::param::param<int>("height_y", heightY, 480);
-
-      // Need to check against resolution
-      bool changed = false;
-      if ((startX + widthX) > screen_w) {
-        // TBD need to more intelligently cap these
-        if (screen_w > widthX) {
-          startX = screen_w - widthX;
-        } else {
-          startX = 0;
-          widthX = screen_w;
-          ros::param::set("width_x", widthX);
-        }
-        ros::param::set("start_x", startY);
-        changed = true;
-      }
-
-      if ((startY + heightY) > screen_h) {
-        // TBD need to more intelligently cap these
-        if (screen_h > heightY) {
-          startY = screen_h - heightY;
-        } else {
-          startY = 0;
-          heightY = screen_h;
-          ros::param::set("height_y", heightY);
-        }
-        ros::param::set("start_y", startY);
-        changed = true;
-      }
-      
-      if (changed) {
-        ROS_WARN_STREAM("parameters had to change " << startX << " " 
-            << startY << " " << widthX << " " << heightY);
-      }
-
       xImageSample = XGetImage(display, DefaultRootWindow(display),
-          startX, startY, widthX, heightY, AllPlanes, ZPixmap);
+          x_offset_, y_offset_, width_, height_, AllPlanes, ZPixmap);
 
       // Check for bad null pointers
       if (xImageSample == NULL) {
-        ROS_ERROR_STREAM("Error taking screenshot!");
+        ROS_ERROR_STREAM("Error taking screenshot! "
+            << ", " << x_offset_ << " " << y_offset_ 
+            << ", " << width_ << " " << height_
+            << ", " << screen_w_ << " " << screen_h_
+            );
         continue;
       }
       
@@ -199,7 +242,7 @@ bool ScreenGrab::spin()
     screen_pub_.publish(im);
 
     ros::spinOnce();
-    loop_rate.sleep();
+    loop_rate_.sleep();
   }
 
   return true;
