@@ -1,8 +1,10 @@
 // copyright Lucas Walter November 2013
 
-#include "ros/ros.h"
-#include "sensor_msgs/Image.h"
-#include "sensor_msgs/image_encodings.h"
+#include <dynamic_reconfigure/server.h>
+#include <ros/ros.h>
+#include <screengrab_ros/ScreenGrabConfig.h>
+#include <sensor_msgs/Image.h>
+#include <sensor_msgs/image_encodings.h>
 
 // X Server includes
 #include <X11/Xlib.h>
@@ -51,11 +53,17 @@ class ScreenGrab
   
   int update_rate_;
 
+  dynamic_reconfigure::Server<screengrab_ros::ScreenGrabConfig> server_;
+  void callback(screengrab_ros::ScreenGrabConfig &config,
+      uint32_t level);
+
 public:
 
   ScreenGrab();
   
   bool spin();
+
+ 
 };
   
 ScreenGrab::ScreenGrab()
@@ -65,6 +73,15 @@ ScreenGrab::ScreenGrab()
       "screengrab", 5);
   ros::param::param<int>("update_rate", update_rate_, 15);
 
+  dynamic_reconfigure::Server<screengrab_ros::ScreenGrabConfig>::CallbackType cbt =
+      boost::bind(&ScreenGrab::callback, this, _1, _2);
+  server_.setCallback(cbt);
+}
+
+void ScreenGrab::callback(screengrab_ros::ScreenGrabConfig &config,
+    uint32_t level)
+{
+  
 }
 
 bool ScreenGrab::spin()
@@ -193,6 +210,6 @@ int main(int argc, char **argv)
 {
   ros::init(argc, argv, "screengrab_ros_node");
 
-  ScreenGrab screen_grab = ScreenGrab();
+  ScreenGrab screen_grab;
   screen_grab.spin();
 }
