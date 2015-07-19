@@ -43,18 +43,33 @@ void XImage2RosImage(XImage& ximage, Display& _xDisplay, Screen& _xScreen,
     return;
 }
 
-
-int main(int argc, char **argv)
+class ScreenGrab
 {
-  ros::init(argc, argv, "screengrab_ros_node");
+  ros::NodeHandle nh_;
+  
+  ros::Publisher screen_pub_;
+  
+  int update_rate_;
 
-  ros::NodeHandle nh;
+public:
 
-  ros::Publisher screen_pub = nh.advertise<sensor_msgs::Image>(
+  ScreenGrab();
+  
+  bool spin();
+};
+  
+ScreenGrab::ScreenGrab()
+{
+
+  screen_pub_ = nh_.advertise<sensor_msgs::Image>(
       "screengrab", 5);
-  int update_rate;
-  ros::param::param<int>("update_rate", update_rate, 15);
-  ros::Rate loop_rate(update_rate);
+  ros::param::param<int>("update_rate", update_rate_, 15);
+
+}
+
+bool ScreenGrab::spin()
+{
+  ros::Rate loop_rate(update_rate_);
 
   // X resources
   Display* display;
@@ -71,20 +86,20 @@ int main(int argc, char **argv)
   display = XOpenDisplay(NULL); // Open first (-best) display
   if (display == NULL) {
     ROS_ERROR_STREAM("bad display");
-    return -1;
+    return false;
   }
 
   screen = DefaultScreenOfDisplay(display);
   if (screen == NULL) {
     ROS_ERROR_STREAM("bad screen");
-    return -2;
+    return false;
   }
 
   Window wid = DefaultRootWindow( display );
   if ( 0 > wid ) {
     ROS_ERROR_STREAM("Failed to obtain the root windows Id "
         "of the default screen of given display.\n");
-    return -3;
+    return false;
   }
 
   XWindowAttributes xwAttr;
@@ -104,9 +119,9 @@ int main(int argc, char **argv)
     
     int new_update_rate;
     ros::param::param<int>("update_rate", new_update_rate, 15);
-    if (new_update_rate != update_rate) {
+    if (new_update_rate != update_rate_) {
       loop_rate = ros::Rate(new_update_rate);
-      update_rate = new_update_rate;
+      update_rate_ = new_update_rate;
     }
     // grab the image
     {
@@ -164,11 +179,20 @@ int main(int argc, char **argv)
 
     }
     
-    screen_pub.publish(im);
+    screen_pub_.publish(im);
 
     ros::spinOnce();
     loop_rate.sleep();
   }
 
-  return 0;
+  return true;
+}
+
+
+int main(int argc, char **argv)
+{
+  ros::init(argc, argv, "screengrab_ros_node");
+
+  ScreenGrab screen_grab = ScreenGrab();
+  screen_grab.spin();
 }
