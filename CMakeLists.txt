@@ -5,6 +5,7 @@ project(screengrab_ros)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  dynamic_reconfigure
   roscpp
   sensor_msgs
   std_msgs
@@ -70,6 +71,11 @@ find_package(catkin REQUIRED COMPONENTS
 #   sensor_msgs#   std_msgs
 # )
 
+generate_dynamic_reconfigure_options(
+  cfg/ScreenGrab.cfg
+)
+
+
 ###################################
 ## catkin specific configuration ##
 ###################################
@@ -102,12 +108,15 @@ include_directories(
 #   src/${PROJECT_NAME}/screengrab_ros.cpp
 # )
 
+
 ## Declare a cpp executable
 add_executable(screengrab_ros_node src/screengrab_ros_node.cpp)
+
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(screengrab_ros_node screengrab_ros_generate_messages_cpp)
+add_dependencies(screengrab_ros_node ${PROJECT_NAME}_gencfg)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(screengrab_ros_node
