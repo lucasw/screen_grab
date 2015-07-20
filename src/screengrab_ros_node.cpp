@@ -5,6 +5,7 @@
 #include <screengrab_ros/ScreenGrabConfig.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/image_encodings.h>
+#include <sensor_msgs/RegionOfInterest.h>
 
 // X Server includes
 #include <X11/Xlib.h>
@@ -50,7 +51,10 @@ class ScreenGrab
   ros::NodeHandle nh_;
   
   ros::Publisher screen_pub_;
-  
+
+  ros::Subscriber roi_sub_;
+  void roiCallback(const sensor_msgs::RegionOfInterest::ConstPtr& msg);
+
   int update_rate_;
 
   typedef dynamic_reconfigure::Server<screengrab_ros::ScreenGrabConfig> ReconfigureServer;
@@ -59,6 +63,7 @@ class ScreenGrab
       uint32_t level);
 
   void checkRoi(int& x_offset, int& y_offset, int& width, int& height);
+  void updateConfig();
 
   int x_offset_;
   int y_offset_;
@@ -97,6 +102,18 @@ ScreenGrab::ScreenGrab() :
   dynamic_reconfigure::Server<screengrab_ros::ScreenGrabConfig>::CallbackType cbt =
       boost::bind(&ScreenGrab::callback, this, _1, _2);
   server_->setCallback(cbt);
+
+  roi_sub_ = nh_.subscribe("roi", 0, &ScreenGrab::roiCallback, this);
+}
+  
+void ScreenGrab::roiCallback(const sensor_msgs::RegionOfInterest::ConstPtr& msg)
+{
+  x_offset_ = msg->x_offset;
+  y_offset_ = msg->y_offset;
+  width_ = msg->width;
+  height_ = msg->height;
+
+  updateConfig();
 }
 
 void ScreenGrab::checkRoi(int& x_offset, int& y_offset, int& width, int& height)
@@ -157,6 +174,21 @@ void ScreenGrab::callback(
   }
 }
 
+void ScreenGrab::updateConfig()
+{
+  checkRoi(x_offset_, y_offset_, width_, height_);
+
+  // TODO just store config_ instead of x_offset_ etc.
+  screengrab_ros::ScreenGrabConfig config;
+  config.update_rate = update_rate_;
+  config.x_offset = x_offset_;
+  config.y_offset = y_offset_;
+  config.width = width_;
+  config.height = height_;
+
+  server_->updateConfig(config);
+}
+
 bool ScreenGrab::spin()
 {
   // X resources
@@ -200,19 +232,9 @@ bool ScreenGrab::spin()
   ros::param::param<int>("y_offset", y_offset_, 0);
   ros::param::param<int>("width", width_, 640);
   ros::param::param<int>("height", height_, 480);
-  checkRoi(x_offset_, y_offset_, width_, height_);
-
-  screengrab_ros::ScreenGrabConfig config;
-  config.update_rate = update_rate_;
-  config.x_offset = x_offset_;
-  config.y_offset = y_offset_;
-  config.width = width_;
-  config.height = height_;
-
-  //boost::recursive_mutex::scoped_lock lock(dr_mutex_);
-  server_->updateConfig(config);
-  //lock.unlock();
-
+  
+  updateConfig();
+ 
   while (ros::ok()) 
   {
     sensor_msgs::ImagePtr im(new sensor_msgs::Image);
