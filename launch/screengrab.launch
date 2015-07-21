@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <launch>
+  
+  <node name="nodelet_manager" pkg="nodelet" type="nodelet" 
+      args="manager" output="screen" />
 
-  <group ns="screengrab_ns">
+  <node name="screen_grab" pkg="nodelet" type="nodelet"
+      args="load screen_grab/ScreenGrab nodelet_manager" output="screen" >
     <param name="update_rate" value="30" />
-    <param name="start_x" value="50" />
-    <param name="start_y" value="50" />
-    <param name="width_x" value="500" />
-    <param name="height_y" value="500" />
-    <node name="screengrab1" pkg="screengrab_ros" type="screengrab_ros_node" />
-    <node name="image_view_grab" pkg="image_view" type="image_view" args="image:=screengrab" />
-    <!-- later add save file that will automatically display screengrab topic -->
-    <!--node name="rviz1" pkg="rviz" type="rviz" /-->
-  </group>
+    <param name="x_offset" value="50" />
+    <param name="y_offset" value="50" />
+    <param name="width" value="500" />
+    <param name="height" value="500" />
+  </node>
+
 </launch>

@@ -1,8 +1,37 @@
-// copyright Lucas Walter November 2013
+/*
+ * Copyright (c) 2013 Lucas Walter 
+ * November 2013
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of the Willow Garage, Inc. nor the names of its
+ *       contributors may be used to endorse or promote products derived from
+ *       this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
 
 #include <dynamic_reconfigure/server.h>
+#include <nodelet/nodelet.h>
 #include <ros/ros.h>
-#include <screengrab_ros/ScreenGrabConfig.h>
+#include <screen_grab/ScreenGrabConfig.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/image_encodings.h>
 
@@ -45,17 +74,20 @@ void XImage2RosImage(XImage& ximage, Display& _xDisplay, Screen& _xScreen,
     return;
 }
 
-class ScreenGrab
+namespace screen_grab
 {
-  ros::NodeHandle nh_;
+
+class ScreenGrab : public nodelet::Nodelet
+{
+  //ros::NodeHandle nh_;
   
   ros::Publisher screen_pub_;
   
   int update_rate_;
 
-  typedef dynamic_reconfigure::Server<screengrab_ros::ScreenGrabConfig> ReconfigureServer;
+  typedef dynamic_reconfigure::Server<screen_grab::ScreenGrabConfig> ReconfigureServer;
   boost::shared_ptr< ReconfigureServer > server_;
-  void callback(screengrab_ros::ScreenGrabConfig &config,
+  void callback(screen_grab::ScreenGrabConfig &config,
       uint32_t level);
 
   void checkRoi(int& x_offset, int& y_offset, int& width, int& height);
@@ -74,12 +106,23 @@ class ScreenGrab
 
 public:
 
+  virtual void onInit();
+
   ScreenGrab();
   
   bool spin();
 
 };
-  
+
+} // screen_grab
+
+#include <pluginlib/class_list_macros.h>
+
+PLUGINLIB_EXPORT_CLASS(screen_grab::ScreenGrab, nodelet::Nodelet)
+
+namespace screen_grab
+{
+
 ScreenGrab::ScreenGrab() :
     x_offset_(0),
     y_offset_(0),
@@ -88,15 +131,21 @@ ScreenGrab::ScreenGrab() :
     loop_rate_(15)
     //server_(dr_mutex_) // this locks up
 {
-  screen_pub_ = nh_.advertise<sensor_msgs::Image>(
-      "screengrab", 5);
-  ros::param::param<int>("update_rate", update_rate_, 15);
+
+}
+
+void ScreenGrab::onInit()
+{
+  screen_pub_ = getPrivateNodeHandle().advertise<sensor_msgs::Image>(
+      "image", 5);
 
   server_.reset(new ReconfigureServer(dr_mutex_)); 
 
-  dynamic_reconfigure::Server<screengrab_ros::ScreenGrabConfig>::CallbackType cbt =
+  dynamic_reconfigure::Server<screen_grab::ScreenGrabConfig>::CallbackType cbt =
       boost::bind(&ScreenGrab::callback, this, _1, _2);
   server_->setCallback(cbt);
+
+  spin();
 }
 
 void ScreenGrab::checkRoi(int& x_offset, int& y_offset, int& width, int& height)
@@ -135,7 +184,7 @@ void ScreenGrab::checkRoi(int& x_offset, int& y_offset, int& width, int& height)
 }
 
 void ScreenGrab::callback(
-    screengrab_ros::ScreenGrabConfig &config,
+    screen_grab::ScreenGrabConfig &config,
     uint32_t level)
 {
   if (level & 1)
@@ -195,14 +244,15 @@ bool ScreenGrab::spin()
 
   // get initial values from parameter server, override
   // dr cfg defaults
-  ros::param::param<int>("update_rate", update_rate_, 15);
-  ros::param::param<int>("x_offset", x_offset_, 0);
-  ros::param::param<int>("y_offset", y_offset_, 0);
-  ros::param::param<int>("width", width_, 640);
-  ros::param::param<int>("height", height_, 480);
+  getPrivateNodeHandle().getParam("update_rate", update_rate_);
+  getPrivateNodeHandle().getParam("x_offset", x_offset_);
+  getPrivateNodeHandle().getParam("y_offset", y_offset_);
+  getPrivateNodeHandle().getParam("width", width_);
+  getPrivateNodeHandle().getParam("height", height_);
   checkRoi(x_offset_, y_offset_, width_, height_);
+  loop_rate_ = ros::Rate(update_rate_);
 
-  screengrab_ros::ScreenGrabConfig config;
+  screen_grab::ScreenGrabConfig config;
   config.update_rate = update_rate_;
   config.x_offset = x_offset_;
   config.y_offset = y_offset_;
@@ -248,11 +298,15 @@ bool ScreenGrab::spin()
   return true;
 }
 
+} // screen_grab
 
+#if 0
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "screengrab_ros_node");
+  ros::init(argc, argv, "screen_grab");
 
   ScreenGrab screen_grab;
   screen_grab.spin();
 }
+#endif
+

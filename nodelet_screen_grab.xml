@@ -1,0 +1,8 @@
+<library path="lib/libscreen_grab">
+  <class name="screen_grab/ScreenGrab" type="screen_grab::ScreenGrab" base_class_type="nodelet::Nodelet">
+    <description>
+      Grab a portion of the screen and publish as an Image
+    </description>
+  </class>
+</library>
+~             
