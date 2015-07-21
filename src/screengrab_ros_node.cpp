@@ -292,7 +292,9 @@ bool ScreenGrab::spin()
   config.height = height_;
 
   updateConfig();
- 
+  
+  bool first_error = true;
+
   while (ros::ok()) 
   {
     sensor_msgs::ImagePtr im(new sensor_msgs::Image);
@@ -303,15 +305,21 @@ bool ScreenGrab::spin()
           x_offset_, y_offset_, width_, height_, AllPlanes, ZPixmap);
 
       // Check for bad null pointers
-      if (xImageSample == NULL) {
+      if (xImageSample == NULL) 
+      {
+        if (first_error) 
         ROS_ERROR_STREAM("Error taking screenshot! "
             << ", " << x_offset_ << " " << y_offset_ 
             << ", " << width_ << " " << height_
             << ", " << screen_w_ << " " << screen_h_
             );
+        first_error = false;
         continue;
       }
       
+      if (!first_error) 
+        ROS_INFO_STREAM(width_ << " " << height_);
+      first_error = true;
       // convert to Image format
       XImage2RosImage(*xImageSample, *display, *screen, im);
       

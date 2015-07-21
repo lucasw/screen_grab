@@ -6,11 +6,21 @@
 
   <node name="screen_grab" pkg="nodelet" type="nodelet"
       args="load screen_grab/ScreenGrab nodelet_manager" output="screen" >
+    <!-- these aren't getting loaded reliably - is that why tutorial
+        math uses yaml loading? -->
     <param name="update_rate" value="30" />
     <param name="x_offset" value="50" />
     <param name="y_offset" value="50" />
     <param name="width" value="500" />
     <param name="height" value="500" />
   </node>
+
+  <!--
+  <node name="image_view" pkg="nodelet" type="nodelet"
+      args="load image_view/image nodelet_manager" output="screen" 
+      >
+    <remap from="screen_grab/image" to="image" />
+  </node>
+  -->
 
 </launch>
