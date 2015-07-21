@@ -87,7 +87,7 @@ class ScreenGrab : public nodelet::Nodelet
   ros::Subscriber roi_sub_;
   void roiCallback(const sensor_msgs::RegionOfInterest::ConstPtr& msg);
 
-  int update_rate_;
+  double update_rate_;
 
   typedef dynamic_reconfigure::Server<screen_grab::ScreenGrabConfig> ReconfigureServer;
   boost::shared_ptr< ReconfigureServer > server_;
@@ -144,14 +144,8 @@ void ScreenGrab::onInit()
   screen_pub_ = getPrivateNodeHandle().advertise<sensor_msgs::Image>(
       "image", 5);
 
-  server_.reset(new ReconfigureServer(dr_mutex_, getPrivateNodeHandle())); 
-
-  dynamic_reconfigure::Server<screen_grab::ScreenGrabConfig>::CallbackType cbt =
-      boost::bind(&ScreenGrab::callback, this, _1, _2);
-  server_->setCallback(cbt);
-
-  roi_sub_ = getPrivateNodeHandle().subscribe("roi", 0, &ScreenGrab::roiCallback, this);
-  
+  // get initial values from parameter server, override
+  // dr cfg defaults
   spin();
 }
   
@@ -197,6 +191,8 @@ void ScreenGrab::checkRoi(int& x_offset, int& y_offset, int& width, int& height)
       height = screen_h_;
     }
   }
+
+  //ROS_INFO_STREAM(x_offset << " " << y_offset << " " << width << " " << height);
 
 }
 
@@ -274,24 +270,37 @@ bool ScreenGrab::spin()
   screen_h_ = xwAttr.height;
   }
 
-  // get initial values from parameter server, override
-  // dr cfg defaults
-  getPrivateNodeHandle().getParam("update_rate", update_rate_);
-  getPrivateNodeHandle().getParam("x_offset", x_offset_);
-  getPrivateNodeHandle().getParam("y_offset", y_offset_);
-  getPrivateNodeHandle().getParam("width", width_);
-  getPrivateNodeHandle().getParam("height", height_);
+  double update_rate;
+  int x_offset;
+  int y_offset;
+  int width;
+  int height;
+
+  bool rv0 = getPrivateNodeHandle().getParam("update_rate", update_rate);
+  bool rv1 = getPrivateNodeHandle().getParam("x_offset", x_offset);
+  bool rv2 = getPrivateNodeHandle().getParam("y_offset", y_offset);
+  bool rv3 = getPrivateNodeHandle().getParam("width", width);
+  bool rv4 = getPrivateNodeHandle().getParam("height", height);
+  
+  ROS_INFO_STREAM(int(rv0) << int(rv1) << int(rv2) << int(rv3) << int(rv4));
+  ROS_INFO_STREAM(update_rate << " " << width << " " << height);
+  server_.reset(new ReconfigureServer(dr_mutex_, getPrivateNodeHandle())); 
+
+  dynamic_reconfigure::Server<screen_grab::ScreenGrabConfig>::CallbackType cbt =
+      boost::bind(&ScreenGrab::callback, this, _1, _2);
+  server_->setCallback(cbt);
+
+  // TODO do I really need to do this, or does dr clobber my params?
+  update_rate_ = update_rate;
+  x_offset_ = x_offset;
+  y_offset_ = y_offset;
+  width_ = width;
+  height_ = height;
   checkRoi(x_offset_, y_offset_, width_, height_);
   loop_rate_ = ros::Rate(update_rate_);
-
-  screen_grab::ScreenGrabConfig config;
-  config.update_rate = update_rate_;
-  config.x_offset = x_offset_;
-  config.y_offset = y_offset_;
-  config.width = width_;
-  config.height = height_;
-
   updateConfig();
+
+  roi_sub_ = getPrivateNodeHandle().subscribe("roi", 0, &ScreenGrab::roiCallback, this);
   
   bool first_error = true;
 
