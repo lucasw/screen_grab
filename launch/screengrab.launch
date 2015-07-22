@@ -6,8 +6,6 @@
 
   <node name="screen_grab" pkg="nodelet" type="nodelet"
       args="load screen_grab/ScreenGrab nodelet_manager" output="screen" >
-    <!-- these aren't getting loaded reliably - is that why tutorial
-        math uses yaml loading? -->
     <param name="update_rate" value="30" />
     <param name="x_offset" value="50" />
     <param name="y_offset" value="50" />
@@ -16,11 +14,13 @@
   </node>
 
   <!--
+  This causess the nodelet manager to lock up.
+  In fact rosrun nodelet nodelet load image_viefdsw/imfdsaage nodelet_manager
+  causes it to lock up. (tried on indigo and jade on Ubuntu 14.04)
   <node name="image_view" pkg="nodelet" type="nodelet"
       args="load image_view/image nodelet_manager" output="screen" 
       >
-    <remap from="screen_grab/image" to="image" />
+    <remap from="image" to="screen_grab/image" />
   </node>
   -->
-
 </launch>
