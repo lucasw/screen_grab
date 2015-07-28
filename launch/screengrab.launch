@@ -1,26 +1,32 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <launch>
-  
+ 
+  <arg name="update_rate" default="10" />
+  <arg name="use_image_show" default="true" />
+  <arg name="use_image_view" default="false" />
+
   <node name="nodelet_manager" pkg="nodelet" type="nodelet" 
       args="manager" output="screen" />
 
   <node name="screen_grab" pkg="nodelet" type="nodelet"
       args="load screen_grab/ScreenGrab nodelet_manager" output="screen" >
-    <param name="update_rate" value="30" />
+    <param name="update_rate" value="$(arg update_rate)" />
     <param name="x_offset" value="50" />
     <param name="y_offset" value="50" />
     <param name="width" value="500" />
     <param name="height" value="500" />
   </node>
 
-  <!--
-  This causess the nodelet manager to lock up.
-  In fact rosrun nodelet nodelet load image_viefdsw/imfdsaage nodelet_manager
-  causes it to lock up. (tried on indigo and jade on Ubuntu 14.04)
+  <!-- image show takes much less cpu that image_view --> 
+  <node name="image_show" pkg="nodelet" type="nodelet"
+      args="load image_show/ImageShow nodelet_manager" output="screen" 
+      if="$(arg use_image_show)"
+      >
+  </node>
+
   <node name="image_view" pkg="nodelet" type="nodelet"
       args="load image_view/image nodelet_manager" output="screen" 
+      if="$(arg use_image_view)"
       >
-    <remap from="image" to="screen_grab/image" />
   </node>
-  -->
 </launch>

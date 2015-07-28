@@ -59,5 +59,6 @@
 
     <!-- Other tools can request additional information be placed here -->
     <nodelet plugin="${prefix}/nodelet_screen_grab.xml" />
+    <nodelet plugin="${prefix}/nodelet_image_show.xml" />
   </export>
 </package>

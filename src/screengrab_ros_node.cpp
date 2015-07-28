@@ -105,9 +105,18 @@ class ScreenGrab : public nodelet::Nodelet
   int screen_w_;
   int screen_h_;
   
-  ros::Rate loop_rate_;
-
   boost::recursive_mutex dr_mutex_;
+
+  void spinOnce(const ros::TimerEvent& e);
+  bool first_error_;
+  
+  ros::Timer timer_;
+
+  // X resources
+  Display* display;
+  Screen* screen;
+  XImage* xImageSample;
+  XColor col;
 
 public:
 
@@ -133,20 +142,10 @@ ScreenGrab::ScreenGrab() :
     y_offset_(0),
     width_(640),
     height_(480),
-    loop_rate_(15)
+    first_error_(false)
     //server_(dr_mutex_) // this locks up
 {
 
-}
-
-void ScreenGrab::onInit()
-{
-  screen_pub_ = getPrivateNodeHandle().advertise<sensor_msgs::Image>(
-      "image", 5);
-
-  // get initial values from parameter server, override
-  // dr cfg defaults
-  spin();
 }
   
 void ScreenGrab::roiCallback(const sensor_msgs::RegionOfInterest::ConstPtr& msg)
@@ -213,8 +212,8 @@ void ScreenGrab::callback(
   {
     if (config.update_rate != update_rate_) 
     {
-      loop_rate_ = ros::Rate(config.update_rate);
       update_rate_ = config.update_rate;
+      // TODO update timer
     }
   }
 }
@@ -234,34 +233,31 @@ void ScreenGrab::updateConfig()
   server_->updateConfig(config);
 }
 
-bool ScreenGrab::spin()
+void ScreenGrab::onInit()
 {
-  // X resources
-  Display* display;
-  Screen* screen;
-  XImage* xImageSample;
-  XColor col;
-
+  screen_pub_ = getNodeHandle().advertise<sensor_msgs::Image>(
+      "image", 5);
+  // TODO move most of this into onInit
   // init
   // from vimjay screencap.cpp (https://github.com/lucasw/vimjay)
   {
   display = XOpenDisplay(NULL); // Open first (-best) display
   if (display == NULL) {
     ROS_ERROR_STREAM("bad display");
-    return false;
+    return;
   }
 
   screen = DefaultScreenOfDisplay(display);
   if (screen == NULL) {
     ROS_ERROR_STREAM("bad screen");
-    return false;
+    return;
   }
 
   Window wid = DefaultRootWindow( display );
   if ( 0 > wid ) {
     ROS_ERROR_STREAM("Failed to obtain the root windows Id "
         "of the default screen of given display.\n");
-    return false;
+    return;
   }
 
   XWindowAttributes xwAttr;
@@ -270,11 +266,11 @@ bool ScreenGrab::spin()
   screen_h_ = xwAttr.height;
   }
 
-  double update_rate;
-  int x_offset;
-  int y_offset;
-  int width;
-  int height;
+  double update_rate = 15;
+  int x_offset = 0;
+  int y_offset = 0;
+  int width = 0;
+  int height = 0;
 
   bool rv0 = getPrivateNodeHandle().getParam("update_rate", update_rate);
   bool rv1 = getPrivateNodeHandle().getParam("x_offset", x_offset);
@@ -297,52 +293,48 @@ bool ScreenGrab::spin()
   width_ = width;
   height_ = height;
   checkRoi(x_offset_, y_offset_, width_, height_);
-  loop_rate_ = ros::Rate(update_rate_);
   updateConfig();
 
   roi_sub_ = getPrivateNodeHandle().subscribe("roi", 0, &ScreenGrab::roiCallback, this);
   
-  bool first_error = true;
+  const float period = 1.0/update_rate_;
+  ROS_INFO_STREAM("period " << period);
+  timer_ = getPrivateNodeHandle().createTimer(ros::Duration(period), 
+      &ScreenGrab::spinOnce, this);
+}
 
-  while (ros::ok()) 
-  {
-    sensor_msgs::ImagePtr im(new sensor_msgs::Image);
+void ScreenGrab::spinOnce(const ros::TimerEvent& e)
+{
+  sensor_msgs::ImagePtr im(new sensor_msgs::Image);
     
     // grab the image
-    {
       xImageSample = XGetImage(display, DefaultRootWindow(display),
           x_offset_, y_offset_, width_, height_, AllPlanes, ZPixmap);
 
       // Check for bad null pointers
       if (xImageSample == NULL) 
       {
-        if (first_error) 
+        if (first_error_) 
         ROS_ERROR_STREAM("Error taking screenshot! "
             << ", " << x_offset_ << " " << y_offset_ 
             << ", " << width_ << " " << height_
             << ", " << screen_w_ << " " << screen_h_
             );
-        first_error = false;
-        continue;
+        first_error_ = false;
+        return;
       }
       
-      if (!first_error) 
+      if (!first_error_) 
         ROS_INFO_STREAM(width_ << " " << height_);
-      first_error = true;
+      first_error_ = true;
       // convert to Image format
       XImage2RosImage(*xImageSample, *display, *screen, im);
       
       XDestroyImage(xImageSample);
 
-    }
+    
     
     screen_pub_.publish(im);
-
-    ros::spinOnce();
-    loop_rate_.sleep();
-  }
-
-  return true;
 }
 
 } // screen_grab

@@ -5,7 +5,9 @@ project(screen_grab)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  cv_bridge  # image_show
   dynamic_reconfigure
+  image_transport
   nodelet
   roscpp
   sensor_msgs
@@ -126,6 +128,15 @@ target_link_libraries(screen_grab
 if(catkin_EXPORTED_LIBRARIES)
   add_dependencies(screen_grab ${catkin_EXPORTED_LIBRARIES})
 endif()
+
+
+add_library(image_show
+   src/image_show.cpp
+)
+
+target_link_libraries(image_show
+   ${catkin_LIBRARIES}
+)
 
 #############
 ## Install ##
