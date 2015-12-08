@@ -1,8 +1,9 @@
 /**
+  Copyright 2015 Lucas Walter
 
   Nodelet based image display.
 
-  Use cv::imshow for now, later look at what I was using in vimjay earlier 
+  Use cv::imshow for now, later look at what I was using in vimjay earlier
   (something where I could make the window undecorated, control the width and height?)
 
   Turn this into a standalone undecorated image viewer
@@ -21,17 +22,17 @@ namespace image_show
 
 class ImageShow : public nodelet::Nodelet
 {
-  image_transport::ImageTransport* it_; 
-  
+  image_transport::ImageTransport* it_;
+
   image_transport::Subscriber image_sub_;
 
   void imageCallback(const sensor_msgs::ImageConstPtr& msg);
-  
+
   ros::Timer timer_;
 
 public:
   virtual void onInit();
- 
+
   ImageShow();
 };
 
@@ -45,7 +46,7 @@ PLUGINLIB_EXPORT_CLASS(image_show::ImageShow, nodelet::Nodelet)
 namespace image_show
 {
 
-ImageShow::ImageShow() 
+ImageShow::ImageShow()
 {
 
 }
@@ -53,7 +54,7 @@ ImageShow::ImageShow()
 void ImageShow::onInit()
 {
   it_ = new image_transport::ImageTransport(getNodeHandle());
-  
+
   image_sub_ = it_->subscribe("image", 1, &ImageShow::imageCallback, this);
 }
 
@@ -71,7 +72,7 @@ void ImageShow::imageCallback(const sensor_msgs::ImageConstPtr& msg)
   }
 
   cv::imshow("image", cv_ptr->image);
-  cv::waitKey(5); 
+  cv::waitKey(5);
 }
 
 }
