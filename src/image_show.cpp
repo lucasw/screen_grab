@@ -35,9 +35,7 @@ public:
 
   ImageShow();
 };
-
-}
-
+}  // namespace image_show
 
 #include <pluginlib/class_list_macros.h>
 
@@ -48,7 +46,6 @@ namespace image_show
 
 ImageShow::ImageShow()
 {
-
 }
 
 void ImageShow::onInit()
@@ -74,5 +71,4 @@ void ImageShow::imageCallback(const sensor_msgs::ImageConstPtr& msg)
   cv::imshow("image", cv_ptr->image);
   cv::waitKey(5);
 }
-
-}
+}  // namespace image_show

@@ -61,7 +61,6 @@ void XImage2RosImage(XImage& ximage, Display& _xDisplay, Screen& _xScreen,
     im->encoding = sensor_msgs::image_encodings::BGRA8;
     im->data.resize(frame_size);
     memcpy(&im->data[0], ximage.data, frame_size);
-
   }
   else     // Extremly slow alternative for non 24bit-depth
   {
@@ -72,8 +71,8 @@ void XImage2RosImage(XImage& ximage, Display& _xDisplay, Screen& _xScreen,
       {
         color.pixel = XGetPixel(&ximage, x, y);
         XQueryColor(&_xDisplay, colmap, &color);
-        //cv::Vec4b col = cv::Vec4b(color.blue, color.green, color.red,0);
-        //tmp.at<cv::Vec4b> (y,x) = col;
+        // cv::Vec4b col = cv::Vec4b(color.blue, color.green, color.red,0);
+        // tmp.at<cv::Vec4b> (y,x) = col;
       }
     }
   }
@@ -85,7 +84,7 @@ namespace screen_grab
 
 class ScreenGrab : public nodelet::Nodelet
 {
-  //ros::NodeHandle nh_;
+  // ros::NodeHandle nh_;
 
   ros::Publisher screen_pub_;
 
@@ -124,16 +123,13 @@ class ScreenGrab : public nodelet::Nodelet
   XColor col;
 
 public:
-
   virtual void onInit();
 
   ScreenGrab();
 
   bool spin();
-
 };
-
-} // screen_grab
+}  //  namespace screen_grab
 
 #include <pluginlib/class_list_macros.h>
 
@@ -148,9 +144,8 @@ ScreenGrab::ScreenGrab() :
   width_(640),
   height_(480),
   first_error_(false)
-  //server_(dr_mutex_) // this locks up
+  // server_(dr_mutex_)  // this locks up
 {
-
 }
 
 void ScreenGrab::roiCallback(const sensor_msgs::RegionOfInterest::ConstPtr& msg)
@@ -165,7 +160,7 @@ void ScreenGrab::roiCallback(const sensor_msgs::RegionOfInterest::ConstPtr& msg)
 
 void ScreenGrab::checkRoi(int& x_offset, int& y_offset, int& width, int& height)
 {
-  // TODO with cv::Rect this could be one line rect1 & rect2
+  // TODO(lucasw) with cv::Rect this could be one line rect1 & rect2
 
   // Need to check against resolution
   if ((x_offset + width) > screen_w_)
@@ -196,8 +191,7 @@ void ScreenGrab::checkRoi(int& x_offset, int& y_offset, int& width, int& height)
     }
   }
 
-  //ROS_INFO_STREAM(x_offset << " " << y_offset << " " << width << " " << height);
-
+  // ROS_INFO_STREAM(x_offset << " " << y_offset << " " << width << " " << height);
 }
 
 void ScreenGrab::callback(
@@ -218,7 +212,7 @@ void ScreenGrab::callback(
     if (config.update_rate != update_rate_)
     {
       update_rate_ = config.update_rate;
-      // TODO update timer
+      // TODO(lucasw) update timer
     }
   }
 }
@@ -227,7 +221,7 @@ void ScreenGrab::updateConfig()
 {
   checkRoi(x_offset_, y_offset_, width_, height_);
 
-  // TODO just store config_ instead of x_offset_ etc.
+  // TODO(lucasw) just store config_ instead of x_offset_ etc.
   screen_grab::ScreenGrabConfig config;
   config.update_rate = update_rate_;
   config.x_offset = x_offset_;
@@ -242,11 +236,11 @@ void ScreenGrab::onInit()
 {
   screen_pub_ = getNodeHandle().advertise<sensor_msgs::Image>(
                   "image", 5);
-  // TODO move most of this into onInit
+  // TODO(lucasw) move most of this into onInit
   // init
   // from vimjay screencap.cpp (https://github.com/lucasw/vimjay)
   {
-    display = XOpenDisplay(NULL); // Open first (-best) display
+    display = XOpenDisplay(NULL);  // Open first (-best) display
     if (display == NULL)
     {
       ROS_ERROR_STREAM("bad display");
@@ -286,7 +280,8 @@ void ScreenGrab::onInit()
   bool rv3 = getPrivateNodeHandle().getParam("width", width);
   bool rv4 = getPrivateNodeHandle().getParam("height", height);
 
-  ROS_INFO_STREAM(int(rv0) << int(rv1) << int(rv2) << int(rv3) << int(rv4));
+  ROS_INFO_STREAM(static_cast<int>(rv0) << static_cast<int>(rv1)
+    << static_cast<int>(rv2) << static_cast<int>(rv3) << static_cast<int>(rv4));
   ROS_INFO_STREAM(update_rate << " " << width << " " << height);
   server_.reset(new ReconfigureServer(dr_mutex_, getPrivateNodeHandle()));
 
@@ -294,7 +289,7 @@ void ScreenGrab::onInit()
     boost::bind(&ScreenGrab::callback, this, _1, _2);
   server_->setCallback(cbt);
 
-  // TODO do I really need to do this, or does dr clobber my params?
+  // TODO(lucasw) do I really need to do this, or does dr clobber my params?
   update_rate_ = update_rate;
   x_offset_ = x_offset;
   y_offset_ = y_offset;
@@ -326,8 +321,7 @@ void ScreenGrab::spinOnce(const ros::TimerEvent& e)
       ROS_ERROR_STREAM("Error taking screenshot! "
                        << ", " << x_offset_ << " " << y_offset_
                        << ", " << width_ << " " << height_
-                       << ", " << screen_w_ << " " << screen_h_
-                      );
+                       << ", " << screen_w_ << " " << screen_h_);
     first_error_ = false;
     return;
   }
@@ -344,8 +338,7 @@ void ScreenGrab::spinOnce(const ros::TimerEvent& e)
 
   screen_pub_.publish(im);
 }
-
-} // screen_grab
+}  // namespace screen_grab
 
 #if 0
 int main(int argc, char **argv)
