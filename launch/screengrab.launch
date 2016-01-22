@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <launch>
- 
+
   <arg name="update_rate" default="10" />
   <arg name="use_image_show" default="true" />
   <arg name="use_image_view" default="false" />
@@ -17,16 +17,14 @@
     <param name="height" value="500" />
   </node>
 
-  <!-- image show takes much less cpu that image_view --> 
+  <!-- image show takes much less cpu that image_view -->
   <node name="image_show" pkg="nodelet" type="nodelet"
       args="load image_show/ImageShow nodelet_manager" output="screen" 
-      if="$(arg use_image_show)"
-      >
+      if="$(arg use_image_show)" >
   </node>
 
   <node name="image_view" pkg="nodelet" type="nodelet"
       args="load image_view/image nodelet_manager" output="screen" 
-      if="$(arg use_image_view)"
-      >
+      if="$(arg use_image_view)" >
   </node>
 </launch>
