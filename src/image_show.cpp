@@ -68,7 +68,12 @@ void ImageShow::imageCallback(const sensor_msgs::ImageConstPtr& msg)
     return;
   }
 
-  cv::imshow(ros::this_node::getName(), cv_ptr->image);
+  // this causes failures
+  // cv::imshow(ros::this_node::getName(), cv_ptr->image);
+  // It's possible I can't have two nodelets using imshow in the same nodelet group,
+  // When I comment out the imshow I get no errors.
+  // std::cout << getName() << " " << cv_ptr->image.size() << std::endl;
+  cv::imshow("image_show_" + getName(), cv_ptr->image);
   cv::waitKey(5);
 }
 }  // namespace image_show

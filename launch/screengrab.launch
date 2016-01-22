@@ -18,15 +18,28 @@
   </node>
 
   <!-- image show takes much less cpu that image_view -->
-  <node name="image_show" pkg="nodelet" type="nodelet"
+  <node name="image_show1" pkg="nodelet" type="nodelet"
       args="load image_show/ImageShow nodelet_manager" output="screen" 
       if="$(arg use_image_show)" >
   </node>
-  <!--node name="image_show2" pkg="nodelet" type="nodelet"
+  <!--
+  Trying to launch a second nodelet results in:
+  
+  [xcb] Unknown request in queue while dequeuing
+  [xcb] Most likely this is a multi-threaded client and XInitThreads has not been called
+  [xcb] Aborting, sorry about that.
+  nodelet: ../../src/xcb_io.c:179: dequeue_pending_request: Assertion `!xcb_xlib_unknown_req_in_deq' failed.
+  [nodelet_manager-2] process has died [pid 13260, exit code -6, cmd /opt/ros/jade/lib/nodelet/nodelet manager __name:=nodelet_manager __log:=/home/lucasw/.ros/log/b73d9d50-c110-11e5-9101-d8fc9374883a/nodelet_manager-2.log].
+  log file: /home/lucasw/.ros/log/b73d9d50-c110-11e5-9101-d8fc9374883a/nodelet_manager-2*.log
+  
+  It's possible I can't have two nodelets using imshow in the same nodelet group.
+  Try making a bare bones image pub nodelet to eliminate the screengrab node as an error source.
+
+  <node name="image_show2" pkg="nodelet" type="nodelet"
       args="load image_show/ImageShow nodelet_manager" output="screen" 
       if="$(arg use_image_show)" >
-  </node-->
-
+  </node>
+  -->
 
   <node name="image_view" pkg="nodelet" type="nodelet"
       args="load image_view/image nodelet_manager" output="screen" 
