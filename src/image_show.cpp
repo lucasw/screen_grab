@@ -68,7 +68,7 @@ void ImageShow::imageCallback(const sensor_msgs::ImageConstPtr& msg)
     return;
   }
 
-  cv::imshow("image", cv_ptr->image);
+  cv::imshow(ros::this_node::getName(), cv_ptr->image);
   cv::waitKey(5);
 }
 }  // namespace image_show

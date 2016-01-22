@@ -22,6 +22,11 @@
       args="load image_show/ImageShow nodelet_manager" output="screen" 
       if="$(arg use_image_show)" >
   </node>
+  <!--node name="image_show2" pkg="nodelet" type="nodelet"
+      args="load image_show/ImageShow nodelet_manager" output="screen" 
+      if="$(arg use_image_show)" >
+  </node-->
+
 
   <node name="image_view" pkg="nodelet" type="nodelet"
       args="load image_view/image nodelet_manager" output="screen" 
