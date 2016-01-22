@@ -1,0 +1,7 @@
+<library path="lib/libscreen_grab">
+  <class name="image_show/ImageShow" type="image_show::ImageShow" base_class_type="nodelet::Nodelet">
+    <description>
+      OpenCV nodelet image display.
+    </description>
+  </class>
+</library>

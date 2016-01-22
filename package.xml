@@ -2,7 +2,7 @@
 <package>
   <name>screen_grab</name>
   <version>0.0.1</version>
-  <description>The screen_grab package</description>
+  <description>Publish a screen capture as an Image</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <!-- Example:  -->
@@ -40,7 +40,9 @@
   <!-- Use test_depend for packages you need only for testing: -->
   <!--   <test_depend>gtest</test_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>cv_bridge</build_depend>
   <build_depend>dynamic_reconfigure</build_depend>
+  <build_depend>image_transport</build_depend>
   <build_depend>nodelet</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>roslint</build_depend>
