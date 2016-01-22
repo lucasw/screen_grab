@@ -1,4 +1,4 @@
-<library path="lib/libscreen_grab">
+<library path="lib/libimage_show">
   <class name="image_show/ImageShow" type="image_show::ImageShow" base_class_type="nodelet::Nodelet">
     <description>
       OpenCV nodelet image display.
