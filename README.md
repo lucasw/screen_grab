@@ -16,6 +16,7 @@ The built package is available for jade:
 
 But building for hydro and indigo ought to work.
 
+A video of an earlier version: https://www.youtube.com/watch?v=Ys9BN4mJ_yc
 
 Some discussion is here: https://plus.google.com/+LucasWalter/posts/f7fLhyWL3A4
 
