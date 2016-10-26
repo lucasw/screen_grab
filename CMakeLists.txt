@@ -104,19 +104,18 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# include_directories(include)
 include_directories(
+  include
   ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a cpp library
 add_library(screen_grab
-   src/screengrab_ros_node.cpp
+   src/screen_grab.cpp
 )
 
 ## Declare a cpp executable
-#add_executable(screen_grab src/screengrab_ros_node.cpp)
-
+add_executable(screen_grab_node src/screen_grab_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -132,6 +131,9 @@ if(catkin_EXPORTED_LIBRARIES)
   add_dependencies(screen_grab ${catkin_EXPORTED_LIBRARIES})
 endif()
 
+target_link_libraries(screen_grab_node
+  screen_grab
+)
 
 add_library(image_show
    src/image_show.cpp
