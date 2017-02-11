@@ -160,7 +160,7 @@ target_link_libraries(image_show
 ## Mark executables and/or libraries for installation
 install(TARGETS
   image_show
-  screen_grab
+  screen_grab_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
