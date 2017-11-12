@@ -2,7 +2,7 @@
 <launch>
 
   <arg name="update_rate" default="10" />
-  <arg name="use_image_show" default="true" />
+  <arg name="use_image_show" default="false" />
   <arg name="use_image_view" default="false" />
 
   <node name="nodelet_manager" pkg="nodelet" type="nodelet" 
