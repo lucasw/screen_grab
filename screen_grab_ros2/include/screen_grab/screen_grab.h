@@ -31,9 +31,9 @@
 #ifndef SCREEN_GRAB_SCREEN_GRAB_H
 #define SCREEN_GRAB_SCREEN_GRAB_H
 
-#include <rclcpp/rclcpp.h>
-#include <sensor_msgs/msg/RegionOfInterest.h>
-#include <sensor_msgs/msg/Image.h>
+#include <rclcpp/rclcpp.hpp>
+#include <sensor_msgs/msg/RegionOfInterest.hpp>
+#include <sensor_msgs/msg/Image.hpp>
 #include <X11/Xlib.h>
 
 class ScreenGrab : public rclcpp::Node
