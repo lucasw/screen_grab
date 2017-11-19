@@ -29,8 +29,7 @@
  */
 
 #include <screen_grab/screen_grab.h>
-#include <sensor_msgs/msg/Image.h>
-#include <sensor_msgs/image_encodings.h>
+#include <sensor_msgs/image_encodings.hpp>
 
 // X Server includes
 #include <X11/Xutil.h>
@@ -41,11 +40,11 @@ using std::placeholders::_1;
 #define ROS_INFO_STREAM(x) std::cout << x << std::endl;
 
 void XImage2RosImage(XImage& ximage, Display& _xDisplay, Screen& _xScreen,
-                     sensor_msgs::msg::ImagePtr& im)
+                     sensor_msgs::msg::Image& im)
 {
   XColor color;
 
-  im->header.stamp = ros::Time::now();
+  im.header.stamp = rclcpp::Time::now();
 
   if (_xScreen.depths->depth == 24)
   {
@@ -54,20 +53,20 @@ void XImage2RosImage(XImage& ximage, Display& _xDisplay, Screen& _xScreen,
     const int wd = ximage.width;
     const int ht = ximage.height;
     const int frame_size = wd * ht * 4;
-    im->width = wd;
-    im->height = ht;
-    im->step = im->width * 4;
+    im.width = wd;
+    im.height = ht;
+    im.step = im.width * 4;
     // maybe this could be extracted from X
-    im->encoding = sensor_msgs::image_encodings::BGRA8;
-    im->data.resize(frame_size);
-    memcpy(&im->data[0], ximage.data, frame_size);
+    im.encoding = sensor_msgs::image_encodings::BGRA8;
+    im.data.resize(frame_size);
+    memcpy(&im.data[0], ximage.data, frame_size);
   }
   else     // Extremly slow alternative for non 24bit-depth
   {
     Colormap colmap = DefaultColormap(&_xDisplay, DefaultScreen(&_xDisplay));
-    for (unsigned int x = 0; x < ximage.width; x++)
+    for (int x = 0; x < ximage.width; x++)
     {
-      for (unsigned int y = 0; y < ximage.height; y++)
+      for (int y = 0; y < ximage.height; y++)
       {
         color.pixel = XGetPixel(&ximage, x, y);
         XQueryColor(&_xDisplay, colmap, &color);
@@ -81,6 +80,7 @@ void XImage2RosImage(XImage& ximage, Display& _xDisplay, Screen& _xScreen,
 
 ScreenGrab::ScreenGrab() :
   Node("screen_grab"),
+  update_rate_(10.0),
   x_offset_(0),
   y_offset_(0),
   width_(640),
@@ -92,10 +92,10 @@ ScreenGrab::ScreenGrab() :
 
 void ScreenGrab::roiCallback(const sensor_msgs::msg::RegionOfInterest::SharedPtr msg)
 {
-  x_offset_ = msg.x_offset;
-  y_offset_ = msg.y_offset;
-  width_ = msg.width;
-  height_ = msg.height;
+  x_offset_ = msg->x_offset;
+  y_offset_ = msg->y_offset;
+  width_ = msg->width;
+  height_ = msg->height;
 
   updateConfig();
 }
@@ -144,7 +144,7 @@ void ScreenGrab::updateConfig()
 void ScreenGrab::onInit()
 {
   screen_pub_ = this->create_publisher<sensor_msgs::msg::Image>("image");
-  
+
   // TODO(lucasw) move most of this into onInit
   // init
   // from vimjay screencap.cpp (https://github.com/lucasw/vimjay)
@@ -164,24 +164,22 @@ void ScreenGrab::onInit()
     }
 
     Window wid = DefaultRootWindow(display);
+    #if 0
     if (0 > wid)
     {
       ROS_ERROR_STREAM("Failed to obtain the root windows Id "
                        "of the default screen of given display.\n");
       return;
     }
+    #endif
 
     XWindowAttributes xwAttr;
-    Status ret = XGetWindowAttributes(display, wid, &xwAttr);
+    // TODO(lucasw) check Status
+    // Status ret =
+    XGetWindowAttributes(display, wid, &xwAttr);
     screen_w_ = xwAttr.width;
     screen_h_ = xwAttr.height;
   }
-
-  double update_rate = 15;
-  int x_offset = 0;
-  int y_offset = 0;
-  int width = 0;
-  int height = 0;
 
   updateConfig();
 
@@ -190,13 +188,14 @@ void ScreenGrab::onInit()
 
   const float period = 1.0 / update_rate_;
   ROS_INFO_STREAM("period " << period);
+  std::chrono::nanoseconds period_ns(static_cast<int>(period * 1e9));
   timer_ = this->create_wall_timer(
-      period, std::bind(&ScreenGrab::spinOnce, this));
+      period_ns, std::bind(&ScreenGrab::spinOnce, this));
 }
 
-void ScreenGrab::spinOnce()  // const ros::TimerEvent& e)
+void ScreenGrab::spinOnce()
 {
-  sensor_msgs::ImagePtr im(new sensor_msgs::Image);
+  sensor_msgs::msg::Image im;
 
   // grab the image
   xImageSample = XGetImage(display, DefaultRootWindow(display),
@@ -228,7 +227,7 @@ void ScreenGrab::spinOnce()  // const ros::TimerEvent& e)
 int main(int argc, char* argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<MinimalSubscriber>());
+  rclcpp::spin(std::make_shared<ScreenGrab>());
   rclcpp::shutdown();
   return 0;
 }

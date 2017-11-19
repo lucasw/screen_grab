@@ -32,8 +32,8 @@
 #define SCREEN_GRAB_SCREEN_GRAB_H
 
 #include <rclcpp/rclcpp.hpp>
-#include <sensor_msgs/msg/RegionOfInterest.hpp>
-#include <sensor_msgs/msg/Image.hpp>
+#include <sensor_msgs/msg/region_of_interest.hpp>
+#include <sensor_msgs/msg/image.hpp>
 #include <X11/Xlib.h>
 
 class ScreenGrab : public rclcpp::Node
@@ -59,10 +59,10 @@ class ScreenGrab : public rclcpp::Node
   int screen_w_;
   int screen_h_;
 
-  void spinOnce(const ros::TimerEvent& e);
+  void spinOnce();
   bool first_error_;
 
-  // ros::Timer timer_;
+  rclcpp::TimerBase::SharedPtr timer_;
 
   // X resources
   Display* display;

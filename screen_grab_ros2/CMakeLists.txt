@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(screen_grab)
 
 # default to C++14
-if(NOT_CMAKE_CXX_STANDARD)
+if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
 endif()
 
@@ -17,6 +17,7 @@ find_package(std_msgs REQUIRED)
 
 include_directories(include)
 add_executable(screen_grab src/screen_grab.cpp)
+target_link_libraries(screen_grab X11)
 ament_target_dependencies(screen_grab rclcpp std_msgs sensor_msgs)
 
 install(TARGETS
