@@ -77,11 +77,11 @@ void XImage2RosImage(XImage& ximage, Display& _xDisplay, Screen& _xScreen,
 ScreenGrab::ScreenGrab(rclcpp::node::Node::SharedPtr clock_node) :
   Node("screen_grab"),
   ts_(clock_node),
-  update_rate_(10.0),
   x_offset_(0),
   y_offset_(0),
   width_(640),
   height_(480),
+  update_rate_(10.0),
   first_error_(false)
 {
   onInit();
@@ -95,6 +95,24 @@ void ScreenGrab::roiCallback(const sensor_msgs::msg::RegionOfInterest::SharedPtr
   height_ = msg->height;
 
   updateConfig();
+}
+
+void ScreenGrab::frameRateCallback(const std_msgs::msg::Float64::SharedPtr msg)
+{
+  if (msg->data <= 0.0)
+  {
+    RCLCPP_ERROR(this->get_name(), "bad update rate %f", msg->data);
+    // TODO(lucasw) disable any existing timer_?
+    return;
+  }
+  update_rate_ = msg->data;
+  const float period = 1.0 / update_rate_;
+  // TODO(lucasw) does RCLCPP_INFO log, or is RCUTILS_LOG_INFO_NAMED needed?
+  // does it publish to a ros topic?
+  RCLCPP_INFO(this->get_name(), "period %f, update rate %f", period, update_rate_);
+  std::chrono::nanoseconds period_ns(static_cast<int>(period * 1e9));
+  timer_ = this->create_wall_timer(
+      period_ns, std::bind(&ScreenGrab::spinOnce, this));
 }
 
 void ScreenGrab::checkRoi(int& x_offset, int& y_offset, int& width, int& height)
@@ -186,13 +204,12 @@ void ScreenGrab::onInit()
   roi_sub_ = this->create_subscription<sensor_msgs::msg::RegionOfInterest>(
         "roi", std::bind(&ScreenGrab::roiCallback, this, _1));
 
-  const float period = 1.0 / update_rate_;
-  // TODO(lucasw) does RCLCPP_INFO log, or is RCUTILS_LOG_INFO_NAMED needed?
-  // does it publish to a ros topic?
-  RCLCPP_INFO(this->get_name(), "period %f", period);
-  std::chrono::nanoseconds period_ns(static_cast<int>(period * 1e9));
-  timer_ = this->create_wall_timer(
-      period_ns, std::bind(&ScreenGrab::spinOnce, this));
+  auto msg = std::make_shared<std_msgs::msg::Float64>();
+  msg->data = update_rate_;
+  frameRateCallback(msg);
+
+  frame_rate_sub_ = this->create_subscription<std_msgs::msg::Float64>(
+        "frame_rate", std::bind(&ScreenGrab::frameRateCallback, this, _1));
 }
 
 void ScreenGrab::spinOnce()

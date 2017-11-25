@@ -34,6 +34,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/region_of_interest.hpp>
 #include <sensor_msgs/msg/image.hpp>
+#include <std_msgs/msg/float64.hpp>
 #include <X11/Xlib.h>
 
 class ScreenGrab : public rclcpp::Node
@@ -43,21 +44,24 @@ class ScreenGrab : public rclcpp::Node
 
   rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr screen_pub_;
 
-  rclcpp::Subscription<sensor_msgs::msg::RegionOfInterest>::SharedPtr roi_sub_;
-
   void onInit();
-  void roiCallback(const sensor_msgs::msg::RegionOfInterest::SharedPtr msg);
-  void updateConfig();
-  double update_rate_;
-
-  // TODO(lucasw) need custom message to replace dynamic reconfigure
-
-  void checkRoi(int& x_offset, int& y_offset, int& width, int& height);
 
   int x_offset_;
   int y_offset_;
   int width_;
   int height_;
+  rclcpp::Subscription<sensor_msgs::msg::RegionOfInterest>::SharedPtr roi_sub_;
+  void roiCallback(const sensor_msgs::msg::RegionOfInterest::SharedPtr msg);
+
+  double update_rate_;
+  rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr frame_rate_sub_;
+  void frameRateCallback(const std_msgs::msg::Float64::SharedPtr msg);
+
+  void updateConfig();
+
+  // TODO(lucasw) need custom message to replace dynamic reconfigure
+
+  void checkRoi(int& x_offset, int& y_offset, int& width, int& height);
 
   int screen_w_;
   int screen_h_;
