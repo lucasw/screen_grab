@@ -37,10 +37,6 @@
 #include <X11/Xutil.h>
 using std::placeholders::_1;
 
-#define ROS_ERROR_STREAM(x) std::cout << "ERROR " << x << std::endl;
-#define ROS_WARN_STREAM(x) std::cout << "WARN " << x << std::endl;
-#define ROS_INFO_STREAM(x) std::cout << x << std::endl;
-
 void XImage2RosImage(XImage& ximage, Display& _xDisplay, Screen& _xScreen,
                      sensor_msgs::msg::Image& im)
 {
@@ -134,7 +130,7 @@ void ScreenGrab::checkRoi(int& x_offset, int& y_offset, int& width, int& height)
     }
   }
 
-  // ROS_INFO_STREAM(x_offset << " " << y_offset << " " << width << " " << height);
+  // RCLCPP_INFO(this->get_name(), x_offset << " " << y_offset << " " << width << " " << height);
 }
 
 void ScreenGrab::updateConfig()
@@ -156,14 +152,14 @@ void ScreenGrab::onInit()
     display = XOpenDisplay(NULL);  // Open first (-best) display
     if (display == NULL)
     {
-      ROS_ERROR_STREAM("bad display");
+      RCLCPP_ERROR(get_name(), "bad display");
       return;
     }
 
     screen = DefaultScreenOfDisplay(display);
     if (screen == NULL)
     {
-      ROS_ERROR_STREAM("bad screen");
+      RCLCPP_ERROR(get_name(), "bad screen");
       return;
     }
 
@@ -171,7 +167,7 @@ void ScreenGrab::onInit()
     #if 0
     if (0 > wid)
     {
-      ROS_ERROR_STREAM("Failed to obtain the root windows Id "
+      RCLCPP_ERROR(get_name(), "Failed to obtain the root windows Id "
                        "of the default screen of given display.\n");
       return;
     }
@@ -191,7 +187,9 @@ void ScreenGrab::onInit()
         "roi", std::bind(&ScreenGrab::roiCallback, this, _1));
 
   const float period = 1.0 / update_rate_;
-  ROS_INFO_STREAM("period " << period);
+  // TODO(lucasw) does RCLCPP_INFO log, or is RCUTILS_LOG_INFO_NAMED needed?
+  // does it publish to a ros topic?
+  RCLCPP_INFO(this->get_name(), "period %f", period);
   std::chrono::nanoseconds period_ns(static_cast<int>(period * 1e9));
   timer_ = this->create_wall_timer(
       period_ns, std::bind(&ScreenGrab::spinOnce, this));
@@ -199,6 +197,8 @@ void ScreenGrab::onInit()
 
 void ScreenGrab::spinOnce()
 {
+  builtin_interfaces::msg::Time timestamp = clock_->now();
+  // std::cout << timestamp.sec << " " << timestamp.nanosec << "\n";
   sensor_msgs::msg::Image im;
 
   // grab the image
@@ -209,19 +209,19 @@ void ScreenGrab::spinOnce()
   if (xImageSample == NULL)
   {
     if (first_error_)
-      ROS_ERROR_STREAM("Error taking screenshot! "
-                       << ", " << x_offset_ << " " << y_offset_
-                       << ", " << width_ << " " << height_
-                       << ", " << screen_w_ << " " << screen_h_);
+      RCLCPP_ERROR(get_name(), "Error taking screenshot! off %d %d, wh %d %d, screen %d %d",
+                       x_offset_, y_offset_,
+                       width_, height_,
+                       screen_w_, screen_h_);
     first_error_ = false;
     return;
   }
 
   if (!first_error_)
-    ROS_INFO_STREAM(width_ << " " << height_);
+    RCLCPP_INFO(this->get_name(), "%d %d", width_, height_);
   first_error_ = true;
   // convert to Image format
-  im.header.stamp = clock_->now();
+  im.header.stamp = timestamp;
   XImage2RosImage(*xImageSample, *display, *screen, im);
 
   XDestroyImage(xImageSample);
