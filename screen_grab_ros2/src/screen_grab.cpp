@@ -28,6 +28,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <rclcpp/clock.hpp>
+#include <rclcpp/time_source.hpp>
 #include <screen_grab/screen_grab.h>
 #include <sensor_msgs/image_encodings.hpp>
 
@@ -43,8 +45,6 @@ void XImage2RosImage(XImage& ximage, Display& _xDisplay, Screen& _xScreen,
                      sensor_msgs::msg::Image& im)
 {
   XColor color;
-
-  im.header.stamp = rclcpp::Time::now();
 
   if (_xScreen.depths->depth == 24)
   {
@@ -78,8 +78,9 @@ void XImage2RosImage(XImage& ximage, Display& _xDisplay, Screen& _xScreen,
   return;
 }
 
-ScreenGrab::ScreenGrab() :
+ScreenGrab::ScreenGrab(rclcpp::node::Node::SharedPtr clock_node) :
   Node("screen_grab"),
+  ts_(clock_node),
   update_rate_(10.0),
   x_offset_(0),
   y_offset_(0),
@@ -144,6 +145,9 @@ void ScreenGrab::updateConfig()
 void ScreenGrab::onInit()
 {
   screen_pub_ = this->create_publisher<sensor_msgs::msg::Image>("image");
+
+  clock_ = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
+  ts_.attachClock(clock_);
 
   // TODO(lucasw) move most of this into onInit
   // init
@@ -217,6 +221,7 @@ void ScreenGrab::spinOnce()
     ROS_INFO_STREAM(width_ << " " << height_);
   first_error_ = true;
   // convert to Image format
+  im.header.stamp = clock_->now();
   XImage2RosImage(*xImageSample, *display, *screen, im);
 
   XDestroyImage(xImageSample);
@@ -227,7 +232,11 @@ void ScreenGrab::spinOnce()
 int main(int argc, char* argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<ScreenGrab>());
+  // TODO(lucasw) would like to construct a timesource within ScreenGrab but not clear on how to do it,
+  // it requires a shared_ptr to the node.
+  auto clock_node = rclcpp::node::Node::make_shared("clock_node");
+  auto node = std::make_shared<ScreenGrab>(clock_node);
+  rclcpp::spin(node);
   rclcpp::shutdown();
   return 0;
 }

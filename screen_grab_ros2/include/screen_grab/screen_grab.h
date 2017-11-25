@@ -38,6 +38,9 @@
 
 class ScreenGrab : public rclcpp::Node
 {
+  rclcpp::TimeSource ts_;
+  rclcpp::Clock::SharedPtr clock_;
+
   rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr screen_pub_;
 
   rclcpp::Subscription<sensor_msgs::msg::RegionOfInterest>::SharedPtr roi_sub_;
@@ -71,7 +74,7 @@ class ScreenGrab : public rclcpp::Node
   XColor col;
 
 public:
-  ScreenGrab();
+  ScreenGrab(rclcpp::node::Node::SharedPtr clock_node);
 
   bool spin();
 };
