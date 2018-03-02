@@ -17,7 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
-
+find_package(OpenCV REQUIRED COMPONENTS highgui)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -95,7 +95,7 @@ catkin_package(
 #  INCLUDE_DIRS include
   LIBRARIES screen_grab
   CATKIN_DEPENDS nodelet roscpp sensor_msgs std_msgs
-#  DEPENDS system_lib
+  DEPENDS OpenCV
 )
 
 ###########
@@ -141,6 +141,7 @@ add_library(image_show
 
 target_link_libraries(image_show
    ${catkin_LIBRARIES}
+   ${OpenCV_LIBRARIES}
 )
 
 #############
