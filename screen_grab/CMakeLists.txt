@@ -93,8 +93,8 @@ generate_dynamic_reconfigure_options(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-  LIBRARIES screen_grab
-  CATKIN_DEPENDS nodelet roscpp sensor_msgs std_msgs
+  LIBRARIES ${PROJECT_NAME}
+  CATKIN_DEPENDS dynamic_reconfigure nodelet roscpp sensor_msgs std_msgs
   DEPENDS OpenCV
 )
 
@@ -110,29 +110,29 @@ include_directories(
 )
 
 ## Declare a cpp library
-add_library(screen_grab
-   src/screen_grab.cpp
+add_library(${PROJECT_NAME}
+   src/${PROJECT_NAME}.cpp
 )
 
 ## Declare a cpp executable
-add_executable(screen_grab_node src/screen_grab_node.cpp)
+add_executable(${PROJECT_NAME}_node src/${PROJECT_NAME}_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(screen_grab screen_grab_generate_messages_cpp)
-add_dependencies(screen_grab ${PROJECT_NAME}_gencfg)
+# add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(screen_grab
+target_link_libraries(${PROJECT_NAME}
    ${catkin_LIBRARIES}
    X11
 )
 if(catkin_EXPORTED_LIBRARIES)
-  add_dependencies(screen_grab ${catkin_EXPORTED_LIBRARIES})
+  add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_LIBRARIES})
 endif()
 
-target_link_libraries(screen_grab_node
-  screen_grab
+target_link_libraries(${PROJECT_NAME}_node
+  ${PROJECT_NAME}
 )
 
 add_library(image_show
@@ -161,7 +161,8 @@ target_link_libraries(image_show
 ## Mark executables and/or libraries for installation
 install(TARGETS
   image_show
-  screen_grab_node
+  ${PROJECT_NAME}
+  ${PROJECT_NAME}_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -177,7 +178,7 @@ install(TARGETS
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 install(FILES
   nodelet_image_show.xml
-  nodelet_screen_grab.xml
+  nodelet_${PROJECT_NAME}.xml
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
