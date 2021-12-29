@@ -28,6 +28,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cv_bridge/cv_bridge.h>
 #include <screen_grab/screen_grab.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/image_encodings.h>
@@ -52,8 +53,8 @@ void XImage2RosImage(XImage& ximage, Display& _xDisplay, Screen& _xScreen,
     im->width = wd;
     im->height = ht;
     im->step = im->width * 4;
-    // maybe this could be extracted from X
-    im->encoding = sensor_msgs::image_encodings::BGRA8;
+    // TODO(lucasw) extract this from X
+    // im->encoding = sensor_msgs::image_encodings::BGRA8;
     im->data.resize(frame_size);
     memcpy(&im->data[0], ximage.data, frame_size);
   }
@@ -235,6 +236,14 @@ void ScreenGrab::onInit()
   y_offset_ = y_offset;
   width_ = width;
   height_ = height;
+
+  // std::string encoding_str = "rgba8";
+  // getPrivateNodeHandle().getParam("encoding", encoding_str);
+  // encoding_ = cv_bridge::getCvType(encoding_str);
+  // ROS_INFO_STREAM(encoding_str << " -> " << encoding_);
+  getPrivateNodeHandle().getParam("encoding", encoding_);
+  ROS_INFO_STREAM("encoding: " << encoding_);
+
   checkRoi(x_offset_, y_offset_, width_, height_);
   updateConfig();
 
@@ -274,7 +283,7 @@ void ScreenGrab::spinOnce(const ros::TimerEvent& e)
 
   XDestroyImage(xImageSample);
 
-
+  im->encoding = encoding_;
 
   screen_pub_.publish(im);
 }

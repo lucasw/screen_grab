@@ -36,6 +36,7 @@
 #include <ros/ros.h>
 #include <screen_grab/ScreenGrabConfig.h>
 #include <sensor_msgs/RegionOfInterest.h>
+#include <string>
 #include <X11/Xlib.h>
 
 namespace screen_grab
@@ -65,6 +66,8 @@ class ScreenGrab : public nodelet::Nodelet
 
   int screen_w_;
   int screen_h_;
+
+  std::string encoding_ = "bgra8";
 
   boost::recursive_mutex dr_mutex_;
 
