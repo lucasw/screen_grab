@@ -1,4 +1,4 @@
-name: ROS CI
+name: Noetic 20.04 ROS CI
 
 on: [push]
 
@@ -10,7 +10,11 @@ jobs:
       ROS_CI_DESKTOP: "`lsb_release -cs`"  # e.g. [trusty|xenial|...]
       ROS_DISTRO: noetic
     steps:
-      - uses: actions/checkout@v1
+      - name: git clone git@github.com:lucasw/screen_grab
+        uses: actions/checkout@v2
+        with:
+          path: catkin_ws/src/screen_grab
+
       - name: Install ROS
         run: |
             sudo sh -c "echo \"deb http://packages.ros.org/ros/ubuntu $ROS_CI_DESKTOP main\" > /etc/apt/sources.list.d/ros-latest.list"
@@ -48,21 +52,17 @@ jobs:
       - name: catkin lint
         run: |
           cd catkin_ws
-          catkin_lint -W2 src
+          LINT_CFG="-W2 --error unsorted_list --ignore uninstalled_script --error launch_depend --error description_meaningless"
+          catkin_lint src $LINT_CFG
       - name: build in devel mode
         run: |
           source /opt/ros/$ROS_DISTRO/setup.bash
-          cd ~/catkin_ws
-          rm -rf build devel install logs
+          cd catkin_ws
+          rm -rf .catkin_tools build devel install logs
           catkin build --no-status
           source devel/setup.bash
-          # echo "::warning $CI_SOURCE_PATH"
-          # echo "::warning `ls -l`"
-          cd src
-          ln -s ~/work  # $CI_SOURCE_PATH
-          cd ..
           catkin build
       - name: lint
         run: |
-          cd ~/catkin_ws
+          cd catkin_ws
           catkin build screen_grab --no-deps --catkin-make-args roslint
