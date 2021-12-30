@@ -1,4 +1,4 @@
-name: ROS CI
+name: Melodic 18.04 ROS CI
 
 on: [push]
 
