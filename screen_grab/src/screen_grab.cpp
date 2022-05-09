@@ -227,7 +227,7 @@ void ScreenGrab::onInit()
   server_.reset(new ReconfigureServer(dr_mutex_, getPrivateNodeHandle()));
 
   dynamic_reconfigure::Server<screen_grab::ScreenGrabConfig>::CallbackType cbt =
-    boost::bind(&ScreenGrab::callback, this, _1, _2);
+    boost::bind(&ScreenGrab::callback, this, boost::placeholders::_1, boost::placeholders::_2);
   server_->setCallback(cbt);
 
   // TODO(lucasw) do I really need to do this, or does dr clobber my params?
