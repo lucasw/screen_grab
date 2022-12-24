@@ -289,5 +289,5 @@ void ScreenGrab::spinOnce(const ros::TimerEvent& e)
 }
 }  // namespace screen_grab
 
-#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_list_macros.hpp>
 PLUGINLIB_EXPORT_CLASS(screen_grab::ScreenGrab, nodelet::Nodelet)

@@ -37,7 +37,7 @@ public:
 };
 }  // namespace image_show
 
-#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_list_macros.hpp>
 
 PLUGINLIB_EXPORT_CLASS(image_show::ImageShow, nodelet::Nodelet)
 
