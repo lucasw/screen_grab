@@ -32,3 +32,4 @@ RUN apt-get install -yqq libx11-dev
 
 COPY screen_grab /home/catkin_ws/src/screen_grab
 WORKDIR /home/catkin_ws
+RUN catkin_make
