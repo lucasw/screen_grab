@@ -71,5 +71,5 @@ jobs:
 
       - name: docker build ubuntu 22.04
         run: |
-          cd catkin_ws
+          cd catkin_ws/src/screen_grab/screen_grab
           docker build . -t ubuntu_2204
