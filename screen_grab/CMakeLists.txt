@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.0.2)
 project(screen_grab)
 
 ## Find catkin macros and libraries
@@ -10,7 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   image_transport
   nodelet
   roscpp
-  roslint
+  # roslint
   sensor_msgs
   std_msgs
 )
@@ -24,7 +24,7 @@ find_package(OpenCV REQUIRED COMPONENTS highgui)
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
 # catkin_python_setup()
 
-roslint_cpp()
+# roslint_cpp()
 
 ################################################
 ## Declare ROS messages, services and actions ##
