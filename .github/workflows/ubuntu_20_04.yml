@@ -66,3 +66,8 @@ jobs:
         run: |
           cd catkin_ws
           catkin build screen_grab --no-deps --catkin-make-args roslint
+
+      - name: docker build ubuntu 22.04
+        run: |
+          cd catkin_ws
+          docker build . -t ubuntu_2204
