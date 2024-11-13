@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.0.2)
 project(screen_grab)
 
 find_package(catkin REQUIRED COMPONENTS
@@ -7,14 +7,14 @@ find_package(catkin REQUIRED COMPONENTS
   image_transport
   nodelet
   roscpp
-  roslint
+  # roslint
   sensor_msgs
   std_msgs
 )
 
 find_package(OpenCV REQUIRED COMPONENTS highgui)
 
-roslint_cpp()
+# roslint_cpp()
 
 generate_dynamic_reconfigure_options(
   cfg/ScreenGrab.cfg
