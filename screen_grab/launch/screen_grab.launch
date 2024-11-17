@@ -2,7 +2,8 @@
 <launch>
 
   <arg name="update_rate" default="10" />
-  <arg name="use_image_show" default="true" />
+  <arg name="use_rqt_image_view" default="true" />
+  <arg name="use_image_show" default="false" />
   <arg name="use_image_view" default="false" />
 
   <node name="nodelet_manager" pkg="nodelet" type="nodelet"
@@ -15,6 +16,11 @@
     <param name="y_offset" value="50" />
     <param name="width" value="500" />
     <param name="height" value="500" />
+  </node>
+
+  <node name="rqt_image_view" pkg="rqt_image_view" type="rqt_image_view"
+      args="/image" output="screen"
+      if="$(arg use_rqt_image_view)" >
   </node>
 
   <!-- image show takes much less cpu that image_view -->
