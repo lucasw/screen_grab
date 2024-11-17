@@ -1,0 +1,31 @@
+name: Noetic 22.04 ROS CI build
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: git clone git@github.com:lucasw/screen_grab
+        uses: actions/checkout@v4
+        with:
+          path: catkin_ws/src/screen_grab
+
+      - name: git clone git@github.com:lucasw/roslint
+        uses: actions/checkout@v4
+        with:
+          repository: lucasw/roslint
+          path: catkin_ws/src/roslint
+
+      - name: install dependencies
+        run: |
+          cd catkin_ws/src/screen_grab
+          sudo ./dependencies_22_04.sh
+
+      - name: catkin make
+        run: |
+          cd catkin_ws
+          find src
+          catkin_make
+          catkin_make screen_grab --cmake-args roslint
