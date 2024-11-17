@@ -11,14 +11,14 @@ find_package(catkin REQUIRED COMPONENTS
   image_transport
   nodelet
   roscpp
-  # roslint
+  roslint
   sensor_msgs
   std_msgs
 )
 
 find_package(OpenCV REQUIRED COMPONENTS highgui)
 
-# roslint_cpp()
+roslint_cpp()
 
 generate_dynamic_reconfigure_options(
   cfg/ScreenGrab.cfg

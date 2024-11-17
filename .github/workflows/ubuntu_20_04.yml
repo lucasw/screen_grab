@@ -63,8 +63,7 @@ jobs:
           source devel/setup.bash
           catkin build
 
-      # temp disable, need to make roslint work in 22.04 to bring this back
-      # - name: lint
-      #   run: |
-      #     cd catkin_ws
-      #     catkin build screen_grab --no-deps --catkin-make-args roslint
+      - name: lint
+        run: |
+          cd catkin_ws
+          catkin build screen_grab --no-deps --catkin-make-args roslint
