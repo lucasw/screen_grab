@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(screen_grab)
 
+if (${CMAKE_VERSION} GREATER "3.27")
+  cmake_policy(SET CMP0148 OLD)
+endif()
+
 find_package(catkin REQUIRED COMPONENTS
   cv_bridge  # image_show
   dynamic_reconfigure
